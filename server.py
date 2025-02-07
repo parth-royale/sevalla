@@ -108,20 +108,49 @@ def push_tick_data_to_db(ticks):
 #             logging.info("Deque flushed and reset after reaching max length.")
 
 #         time.sleep(2)  # Flush interval (adjust as needed)
+###############################################################################################################################################
+# import threading
 
-import threading
+# def check_and_flush_deque():
+#     """Flushes tick data to DB when deque reaches capacity."""
+#     while True:
+#         if len(tick_data) >= DEQUE_MAXLEN:
+#             ticks_to_flush = list(tick_data)
+#             tick_data.clear()
+#             push_tick_data_to_db(ticks_to_flush)
+#             logging.info("Deque flushed and reset after reaching max length.")
 
-def check_and_flush_deque():
-    """Flushes tick data to DB when deque reaches capacity."""
-    while True:
-        if len(tick_data) >= DEQUE_MAXLEN:
-            ticks_to_flush = list(tick_data)
-            tick_data.clear()
-            push_tick_data_to_db(ticks_to_flush)
-            logging.info("Deque flushed and reset after reaching max length.")
+#         threading.Event().wait(0.5)  # More efficient than time.sleep()
 
-        threading.Event().wait(0.5)  # More efficient than time.sleep()
 
+# def ws_client_connect():
+#     """Connects to Bybit WebSocket and processes tick data."""
+#     import websocket
+
+#     ws_url = "wss://stream.bybit.com/v5/public/linear"
+
+#     def on_message(ws, message):
+#         tick = json.loads(message)
+#         if tick.get("topic") == "publicTrade.BTCUSDT":
+#             trade_data = tick["data"][0]
+#             tick_time = datetime.fromtimestamp(trade_data["T"] / 1000)
+#             price = float(trade_data["p"])
+#             tick_data.append({"timestamp": tick_time, "price": price})
+
+#             logging.info(
+#                 "Append #%d: deque size = %d\nDeque contents:\n%s\n",
+#                 len(tick_data),
+#                 len(tick_data),
+#                 json.dumps(list(tick_data)[-5:], indent=4, default=str),
+#             )
+
+#     def on_open(ws):
+#         ws.send(json.dumps({"op": "subscribe", "args": ["publicTrade.BTCUSDT"]}))
+#         logging.info("WebSocket connected and subscribed.")
+
+#     ws = websocket.WebSocketApp(ws_url, on_message=on_message)
+#     ws.on_open = on_open
+#     ws.run_forever()
 
 def ws_client_connect():
     """Connects to Bybit WebSocket and processes tick data."""
@@ -137,8 +166,17 @@ def ws_client_connect():
             price = float(trade_data["p"])
             tick_data.append({"timestamp": tick_time, "price": price})
 
+            # Flush if deque reaches max length
+            if len(tick_data) >= DEQUE_MAXLEN:
+                ticks_to_flush = list(tick_data)  # Copy before clearing
+                tick_data.clear()
+                push_tick_data_to_db(ticks_to_flush)
+                logging.info("Deque flushed and reset after reaching max length.")
+
+            threading.Event().wait(0.5)  # More efficient than time.sleep()
+
             logging.info(
-                "Append #%d: deque size = %d\nDeque contents:\n%s\n",
+                "Append #%d: deque size = %d\nLast 5 ticks:\n%s\n",
                 len(tick_data),
                 len(tick_data),
                 json.dumps(list(tick_data)[-5:], indent=4, default=str),
@@ -150,8 +188,7 @@ def ws_client_connect():
 
     ws = websocket.WebSocketApp(ws_url, on_message=on_message)
     ws.on_open = on_open
-    ws.run_forever()
-
+    ws.run_forever()  # Blocks, but now handles both receiving and flushing
 
 def tick_to_candle(tick_data_deque, timeframe="1min"):
     """Converts tick data to OHLC candlestick format."""
