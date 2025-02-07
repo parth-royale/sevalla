@@ -17,7 +17,7 @@ app = Flask(__name__)
 sock = Sock(app)
 
 # Deque to store tick data for processing
-DEQUE_MAXLEN = 10
+DEQUE_MAXLEN = 1000
 tick_data = deque(maxlen=DEQUE_MAXLEN)  # Adjust maxlen as needed
 
 # Logging Configuration
