@@ -10,6 +10,7 @@ import time
 import psycopg2
 from psycopg2 import sql
 from psycopg2.pool import SimpleConnectionPool
+import os 
 
 # Flask Setup
 app = Flask(__name__)
