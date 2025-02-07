@@ -195,10 +195,11 @@ def main():
 
     threading.Thread(target=ws_client_connect, daemon=True).start()
     threading.Thread(target=check_and_flush_deque, daemon=True).start()
-    
-    port = int(os.environ.get("PORT", 8000))  # Get port from environment or default to 8000
+
+    port = int(os.getenv('PORT', 80))
+    print('Listening on port %s' % (port))
+    # port = int(os.environ.get("PORT", 8000))  # Get port from environment or default to 8000
     app.run(debug=False, host="0.0.0.0", port=port)  # Bind to 0.0.0.0 for Heroku
 
 
-if __name__ == "__main__":
-    main()
+main()
