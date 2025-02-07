@@ -17,7 +17,7 @@ app = Flask(__name__)
 sock = Sock(app)
 
 # Deque to store tick data for processing
-DEQUE_MAXLEN = 1000
+DEQUE_MAXLEN = 10
 tick_data = deque(maxlen=DEQUE_MAXLEN)  # Adjust maxlen as needed
 
 # Logging Configuration
@@ -90,13 +90,37 @@ def push_tick_data_to_db(ticks):
             db_pool.putconn(conn)
 
 
+# def check_and_flush_deque():
+#     """Flushes tick data to DB when deque reaches capacity."""
+#     while True:
+#         if len(tick_data) >= DEQUE_MAXLEN:
+#             push_tick_data_to_db(list(tick_data))
+#             tick_data.clear()
+#         time.sleep(2)  # Flush interval (adjustable)
+# def check_and_flush_deque():
+#     """Flushes tick data to DB when deque reaches capacity."""
+#     while True:
+#         if len(tick_data) >= DEQUE_MAXLEN:
+#             ticks_to_flush = list(tick_data)  # Copy current data
+#             tick_data.clear()  # Clear deque before database insertion
+            
+#             push_tick_data_to_db(ticks_to_flush)  # Now insert to DB
+#             logging.info("Deque flushed and reset after reaching max length.")
+
+#         time.sleep(2)  # Flush interval (adjust as needed)
+
+import threading
+
 def check_and_flush_deque():
     """Flushes tick data to DB when deque reaches capacity."""
     while True:
         if len(tick_data) >= DEQUE_MAXLEN:
-            push_tick_data_to_db(list(tick_data))
+            ticks_to_flush = list(tick_data)
             tick_data.clear()
-        time.sleep(2)  # Flush interval (adjustable)
+            push_tick_data_to_db(ticks_to_flush)
+            logging.info("Deque flushed and reset after reaching max length.")
+
+        threading.Event().wait(0.5)  # More efficient than time.sleep()
 
 
 def ws_client_connect():
