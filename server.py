@@ -258,7 +258,7 @@ def main():
     create_table_if_not_exists()
 
     threading.Thread(target=ws_client_connect, daemon=True).start()
-    threading.Thread(target=check_and_flush_deque, daemon=True).start()
+    # threading.Thread(target=check_and_flush_deque, daemon=True).start()
 
     port = int(os.getenv('PORT', 80))
     print('Listening on port %s' % (port))
