@@ -171,7 +171,9 @@ def index():
                 timeScale: { borderColor: '#cccccc', timeVisible: true, secondsVisible: true }
             });
             const candleSeries = chart.addCandlestickSeries();
-            const ws = new WebSocket('ws://' + location.host + '/ws');
+            // const ws = new WebSocket('ws://' + location.host + '/ws');
+            const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
+
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 const formattedData = data.map(candle => ({
