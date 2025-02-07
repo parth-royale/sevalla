@@ -245,6 +245,7 @@ def index():
                     close: candle.Close
                 }));
                 candleSeries.setData(formattedData);
+                console.log(formattedData);
             };
         </script>
     </body>
